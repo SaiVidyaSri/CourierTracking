@@ -52,17 +52,14 @@ function closeForm (){
 // Function to load initial data from db.json
 async function loadInitialData() {
     try {
-        const res = await fetch("db.json");
+        const res = await fetch(`${API_BASE}/shipments`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        const shipments = data.shipments || [];
-        
-        // Always load fresh data from db.json
+        const shipments = await res.json();
+        // Always load fresh data from backend
         localStorage.setItem("shipments", JSON.stringify(shipments));
         console.log("Loaded shipments:", shipments.length);
     } catch (err) {
-        console.error("Failed to load initial data from db.json:", err);
-        
+        console.error("Failed to load initial data from backend:", err);
         // Fallback: Load some sample data
         const fallbackData = [
             {

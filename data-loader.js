@@ -1,15 +1,12 @@
 // Load data from db.json for admin interface
 async function loadDataFromDB() {
     try {
-        console.log("Attempting to load data from db.json...");
-        const response = await fetch('./db.json');
-        
+        console.log("Attempting to load data from backend API...");
+        const response = await fetch(`${API_BASE}/shipments`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
-        const data = await response.json();
-        let shipments = data.shipments || [];
+        const shipments = await response.json();
         
         // Get any locally added/modified shipments
         const localShipments = JSON.parse(localStorage.getItem("localShipments")) || [];

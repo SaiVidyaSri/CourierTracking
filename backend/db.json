@@ -98,60 +98,6 @@
       "status": "Pending",
       "currentLocation": "Coimbatore",
       "estimatedDelivery": "2025-07-22"
-    },
-    {
-      "id": 12,
-      "trackingNumber": "HIJ456",
-      "sender": "Wendy",
-      "recipient": "Xavier",
-      "status": "Delivered",
-      "currentLocation": "Bhopal",
-      "estimatedDelivery": "2025-06-18"
-    },
-    {
-      "id": 13,
-      "trackingNumber": "KLM789",
-      "sender": "Yvonne",
-      "recipient": "Zack",
-      "status": "In Transit",
-      "currentLocation": "Nagpur",
-      "estimatedDelivery": "2025-07-25"
-    },
-    {
-      "id": 14,
-      "trackingNumber": "NOP012",
-      "sender": "Aaron",
-      "recipient": "Becky",
-      "status": "Pending",
-      "currentLocation": "Surat",
-      "estimatedDelivery": "2025-07-28"
-    },
-    {
-      "id": 15,
-      "trackingNumber": "QRS345",
-      "sender": "Catherine",
-      "recipient": "Derek",
-      "status": "Delivered",
-      "currentLocation": "Vadodara",
-      "estimatedDelivery": "2025-06-15"
-    },
-    {
-      "id": "eb33",
-      "trackingNumber": "18888",
-      "sender": "kiran",
-      "recipient": "vbnm",
-      "status": "Pending",
-      "currentLocation": "chennai",
-      "estimatedDelivery": "2025-07-12"
-    },
-    {
-      "trackingNumber": "5000",
-      "sender": "krishna",
-      "recipient": "donthagani sai vidya sri",
-      "status": "Delivered",
-      "currentLocation": "tirupati",
-      "estimatedDelivery": "2025-06-27",
-      "id": "5b85"
     }
   ]
 }

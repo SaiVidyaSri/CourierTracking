@@ -40,9 +40,11 @@ This will make your changes permanent across all sessions.
     
     static async loadFromFile() {
         try {
-            const response = await fetch('db.json');
-            if (!response.ok) throw new Error('Failed to load db.json');
-            return await response.json();
+            // Use API_BASE from config.js and fetch from backend endpoint
+            const response = await fetch(`${API_BASE}/shipments`);
+            if (!response.ok) throw new Error('Failed to load shipments from backend');
+            const shipments = await response.json();
+            return { shipments };
         } catch (error) {
             console.error("Error loading data:", error);
             return { shipments: [] };
