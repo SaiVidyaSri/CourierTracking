@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Data Loading</title>
+</head>
+<body>
+    <h1>Testing db.json loading</h1>
+    <div id="results">Loading...</div>
+    
+    <script>
+        async function testLoad() {
+            try {
+                console.log("Starting fetch...");
+                const res = await fetch("db.json");
+                console.log("Fetch response:", res);
+                
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                console.log("Data loaded:", data);
+                
+                const shipments = data.shipments || [];
+                console.log("Shipments:", shipments.length);
+                
+                document.getElementById('results').innerHTML = `
+                    <p>Successfully loaded ${shipments.length} shipments!</p>
+                    <pre>${JSON.stringify(shipments.slice(0, 3), null, 2)}</pre>
+                `;
+            } catch (err) {
+                console.error("Error:", err);
+                document.getElementById('results').innerHTML = `Error: ${err.message}`;
+            }
+        }
+        
+        testLoad();
+    </script>
+</body>
+</html>

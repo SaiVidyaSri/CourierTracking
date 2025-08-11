@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="shipmentstyles.css">
+</head>
+<body>
+    <div class="container">
+        <div class = "header">
+            <div class="logo">
+                <div class="logo-box">
+                    <i class="fa-solid fa-box"></i>CourierTrack
+                </div>
+            </div>
+            <div class="header-buttons">
+                <a href="dashboard.html" class="dashboard-btn">Dashboard</a>
+                <a href="index.html" class="signup-btn">Logout</a>
+            </div>
+            <div class="profile dropdown">
+            <button onclick="toggleProfile()" class="dropbtn">
+                <i class="fa-solid fa-user"></i>
+            </button>
+            <div id="profileDropdown" class="dropdown-content">
+                <a href="#">Profile</a>
+                <a href="#">Settings</a>
+                <a href="#" onclick="logout()">Logout</a>
+            </div>
+            </div>
+        </div>
+        <div class="content">
+            <div class="heading">Courier Management</div>
+            <div class="subheading">
+             Manage all your shipments and update their progress
+            </div>
+        </div>
+        <div class="main">
+        <div class="content2">
+            <div class="shipment-container">
+                <div class="shipment">
+                <div class="ship-header">
+                    <h2>All Shipments</h2>
+                    <div class="add-shipment-btn"><a href="shipmentform.html">+Add Shipment</a></div>
+                </div>
+                <div class="shipment-content">
+                    <div class="icon"><i class="fa-solid fa-box"></i></div>
+                    <div class="line1">No shipments found</div>
+                    <div class="line2">Create your first shipment to get started</div>
+                    <div class="create-shipment-btn"><a href="shipmentform.html">Create Shipment</a></div>
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
+        <div class="shipment-cards" id="shipmentCardsContainer" style="display: none;"></div>
+    </div>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const container = document.querySelector(".shipment-content");
+  let shipments = [];
+
+  // Check if we need to refresh data
+  const dataUpdated = localStorage.getItem("dataUpdated");
+  if (dataUpdated === "true") {
+    localStorage.removeItem("dataUpdated");
+    console.log("Data was updated, refreshing...");
+  }
+
+  try {
+    // Always load merged data (db.json + local additions)
+    if (typeof loadDataFromDB === 'function') {
+      shipments = await loadDataFromDB();
+    } else {
+      // Fallback to localStorage if data-loader not available
+      shipments = JSON.parse(localStorage.getItem("shipments")) || [];
+    }
+    
+    console.log("Total shipments loaded:", shipments.length);
+  } catch (err) {
+    console.error("Failed to load shipments:", err);
+    shipments = JSON.parse(localStorage.getItem("shipments")) || [];
+  }
+
+  if (shipments.length === 0) return;
+
+  container.innerHTML = `
+    <table class="shipment-table">
+      <thead><tr>
+        <th>Tracking #</th><th>Sender</th><th>Recipient</th>
+        <th>Status</th><th>Location</th><th>Est. Delivery</th><th>Actions</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>`;
+  
+  const tbody = container.querySelector("tbody");
+  shipments.forEach(s => {
+    tbody.insertAdjacentHTML("beforeend", `
+      <tr>
+        <td><strong>${s.trackingNumber}</strong></td>
+        <td>${s.sender}</td>
+        <td>${s.recipient}</td>
+        <td><span class="status-badge">${s.status}</span></td>
+        <td>${s.currentLocation}</td>
+        <td>${s.estimatedDelivery}</td>
+        <td>
+          <button class="edit-btn" data-id="${s.id}">Edit</button>
+          <button class="delete-btn" data-id="${s.id}">Delete</button>
+        </td>
+      </tr>`);
+  });
+
+  tbody.addEventListener("click", async (e) => {
+    const id = e.target.getAttribute("data-id");
+    if (!id) return;
+
+    if (e.target.classList.contains("delete-btn")) {
+  const shipment = shipments.find(s => s.id == id);
+  const confirmed = confirm(`Are you sure you want to delete the shipment with tracking number (${shipment.trackingNumber})?`);
+  if (!confirmed) return;
+  
+  // Remove from main shipments
+  let storedShipments = JSON.parse(localStorage.getItem("shipments")) || [];
+  storedShipments = storedShipments.filter(s => s.id != id);
+  localStorage.setItem("shipments", JSON.stringify(storedShipments));
+  
+  // Remove from local additions or mark as deleted
+  let localShipments = JSON.parse(localStorage.getItem("localShipments")) || [];
+  localShipments = localShipments.filter(s => s.id != id);
+  localStorage.setItem("localShipments", JSON.stringify(localShipments));
+  
+  // Track deleted shipments
+  let deletedShipments = JSON.parse(localStorage.getItem("deletedShipments")) || [];
+  if (!deletedShipments.includes(id)) {
+    deletedShipments.push(id);
+    localStorage.setItem("deletedShipments", JSON.stringify(deletedShipments));
+  }
+  
+  // Remove the row from table
+  e.target.closest("tr").remove();
+  
+  // Update the shipments array for consistency
+  shipments = storedShipments;
+  
+  alert("Shipment deleted successfully! This deletion will persist across sessions.");
+}
+
+
+    if (e.target.matches(".edit-btn")) {
+      const shipment = shipments.find(s => s.id == id);
+      localStorage.setItem("editShipment", JSON.stringify(shipment));
+      window.location.href = "shipmentform.html?edit=true";
+    }
+  });
+});
+function toggleProfile() {
+  document.getElementById("profileDropdown").classList.toggle("show");
+}
+
+window.addEventListener("click", function (e) {
+  const dropdown = document.getElementById("profileDropdown");
+  const btn = document.querySelector(".dropbtn");
+  if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+    dropdown.classList.remove("show");
+  }
+});
+
+function logout() {
+  localStorage.removeItem("currentUser");
+  window.location.href = "login.html";
+}
+
+function exportDatabase() {
+  try {
+    // Get merged data from data-loader
+    const shipments = JSON.parse(localStorage.getItem('shipments') || '[]');
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const deletedShipments = JSON.parse(localStorage.getItem('deletedShipments') || '[]');
+    const localShipments = JSON.parse(localStorage.getItem('localShipments') || '[]');
+    
+    // Create the final merged data
+    const exportData = {
+      shipments: [...shipments, ...localShipments].filter(shipment => 
+        !deletedShipments.includes(shipment.id)
+      ),
+      users: users
+    };
+    
+    // Create a downloadable file
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    
+    // Create download link
+    const url = URL.createObjectURL(dataBlob);
+    const downloadLink = document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.download = 'db_updated.json';
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    URL.revokeObjectURL(url);
+    
+    alert('Database exported successfully! Replace your db.json file with the downloaded db_updated.json file.');
+  } catch (error) {
+    console.error('Export error:', error);
+    alert('Error exporting database. Please try again.');
+  }
+}
+</script>
+<script src="data-manager.js"></script>
+<script src="data-loader.js"></script>
+
+</body>
+</html>

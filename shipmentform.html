@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="shipmentformstyles.css">
+</head>
+<body>
+  <div class="form-wrapper">
+    <div class="form-box">
+        <button class="close-btn" onclick="closeForm()">×</button>
+      <div class="form-header">
+        <h3>Add New Shipment</h3>
+      </div>
+      <form id="shipmentForm">
+        <input type="hidden" id="shipmentId" />
+        <div class="form-group">
+          <label for="trackingNumber">Tracking Number</label>
+          <input type="text" id="trackingNumber" class="form-input" placeholder="Enter tracking number" required />
+        </div>
+        <div class="form-group">
+          <label for="sender">Sender</label>
+          <input type="text" id="sender" class="form-input" placeholder="Enter sender name" required />
+        </div>
+        <div class="form-group">
+          <label for="recipient">Recipient</label>
+          <input type="text" id="recipient" class="form-input" placeholder="Enter recipient name" required />
+        </div>
+        <div class="form-group">
+          <label for="status">Status</label>
+          <select id="status" class="form-input" required>
+            <option value="">Select status</option>
+            <option value="Pending">Pending</option>
+            <option value="In Transit">In Transit</option>
+            <option value="Delivered">Delivered</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="currentLocation">Current Location</label>
+          <input type="text" id="currentLocation" class="form-input" placeholder="Enter current location" required />
+        </div>
+        <div class="form-group">
+          <label for="estimatedDelivery">Estimated Delivery Date</label>
+          <input type="date" id="estimatedDelivery" class="form-input" required />
+        </div>
+        <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeForm()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+                <span id="submitText">Add Shipment</span>
+            </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("shipmentForm");
+  const submitText = document.getElementById("submitText");
+  const shipmentIdInput = document.getElementById("shipmentId");
+  const params = new URLSearchParams(window.location.search);
+  const isEdit = params.get("edit") === "true";
+
+  if (isEdit) {
+    const shipment = JSON.parse(localStorage.getItem("editShipment") || "{}");
+    if (shipment && shipment.id) {
+      document.querySelector(".form-header h3").textContent = "Edit Shipment";
+      submitText.textContent = "Update Shipment";
+      shipmentIdInput.value = shipment.id;
+      form.trackingNumber.value = shipment.trackingNumber || "";
+      form.sender.value = shipment.sender || "";
+      form.recipient.value = shipment.recipient || "";
+      form.status.value = shipment.status || "";
+      form.currentLocation.value = shipment.currentLocation || "";
+      form.estimatedDelivery.value = shipment.estimatedDelivery || "";
+    }
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    // Get form data
+    const shipment = {
+      trackingNumber: form.trackingNumber.value.trim(),
+      sender: form.sender.value.trim(),
+      recipient: form.recipient.value.trim(),
+      status: form.status.value,
+      currentLocation: form.currentLocation.value.trim(),
+      estimatedDelivery: form.estimatedDelivery.value
+    };
+
+    // Validate required fields
+    if (!shipment.trackingNumber || !shipment.sender || !shipment.recipient || 
+        !shipment.status || !shipment.currentLocation || !shipment.estimatedDelivery) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    const id = shipmentIdInput.value;
+    
+    try {
+      // Get existing shipments from merged data
+      let shipments = JSON.parse(localStorage.getItem("shipments")) || [];
+      let localShipments = JSON.parse(localStorage.getItem("localShipments")) || [];
+      
+      if (id) {
+        // Update existing shipment
+        const index = shipments.findIndex(s => s.id == id);
+        if (index !== -1) {
+          shipments[index] = { ...shipment, id };
+          
+          // Also update in local storage
+          const localIndex = localShipments.findIndex(s => s.id == id);
+          if (localIndex !== -1) {
+            localShipments[localIndex] = { ...shipment, id };
+          } else {
+            localShipments.push({ ...shipment, id });
+          }
+          
+          console.log("Updated shipment:", shipments[index]);
+        } else {
+          alert("Shipment not found for editing.");
+          return;
+        }
+      } else {
+        // Add new shipment with unique ID
+        shipment.id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+        shipments.push(shipment);
+        localShipments.push(shipment);
+        console.log("Added new shipment:", shipment);
+      }
+      
+      // Save to both localStorage and localShipments
+      localStorage.setItem("shipments", JSON.stringify(shipments));
+      localStorage.setItem("localShipments", JSON.stringify(localShipments));
+      
+      // Also save to file for permanent storage
+      if (window.DataManager) {
+        await DataManager.saveToFile({ shipments: shipments });
+      }
+      
+      // Clear edit data
+      localStorage.removeItem("editShipment");
+      
+      // Mark that data has been updated
+      localStorage.setItem("dataUpdated", "true");
+      
+      // Show success message
+      alert(`Shipment with tracking number (${shipment.trackingNumber}) was successfully ${id ? 'updated' : 'added'}.\n\nThis shipment will persist across sessions and be visible in all interfaces.`);
+      
+      // Redirect back to shipment list
+      window.location.href = "shipment.html";
+      
+    } catch (err) {
+      console.error("Save failed:", err);
+      alert("Failed to save shipment. Please try again.");
+    }
+  });
+});
+  function closeForm() {
+    window.location.href = "shipment.html";
+  }
+</script>
+<script src="data-manager.js"></script>
+<script src="data-loader.js"></script>
+
+</body>
+</html>
